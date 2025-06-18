@@ -18,45 +18,38 @@ db.init_app(app)
 @app.route('/')
 def index():
     body = {'message': 'Flask SQLAlchemy Lab 1'}
-    return make_response(body, 200)
+    return make_response(body, 202)
 
 # Add views here
 @app.route('/earthquakes/<int:id>')
-def get_earthquake_by_id(id):
+def view_earthquake(id):
     earthquake = Earthquake.query.get(id)
+    
     if earthquake:
-        found_data = {
-            "id": earthquake.id,
-            "location": earthquake.location,
-            "magnitude": earthquake.magnitude,
-            "year": earthquake.year
-        }
-        return jsonify(found_data),200
-    else:
-        return jsonify({
-            "message": f"Earthquake {id} not found."
-        }), 404
-
+        response = jsonify({
+            'id': earthquake.id,
+            'location': earthquake.location,
+            'magnitude': earthquake.magnitude,
+            'year': earthquake.year
+        })
+        return make_response(response, 200)
+    
+    else: 
+        response = jsonify({
+            'message':f"Earthquake {id} not found."
+        })
+        return make_response(response, 404)
+    
 
 @app.route('/earthquakes/magnitude/<float:magnitude>')
-def get_earthquake_by_magnitude(magnitude):
-    quakes = Earthquake.query.filter(Earthquake.magnitude >= magnitude).all()
+def view_magnitudes(magnitude):
+    earthquakes = Earthquake.query.filter(Earthquake.magnitude >= magnitude).all()
 
-    quake_list = [
-        {
-            "id": quake.id,
-            "location": quake.location,
-            "magnitude": quake.magnitude,
-            "year": quake.year
-        }
-        for quake in quakes
-    ]
-
-
-    return jsonify({
-        "count" : len(quake_list),
-        "quakes": quake_list
-    }), 200
+    response = jsonify({
+        'count': len(earthquakes),
+        'quakes': [quake.to_dict() for quake in earthquakes]
+    })
+    return make_response(response, 200)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
